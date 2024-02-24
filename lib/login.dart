@@ -49,14 +49,14 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               controller: _usernameController,
               decoration: const InputDecoration(
-                labelText: 'Username',
+                labelText: 'Muhammad Jalaludin Qurthubi',
               ),
             ),
             const SizedBox(height: 12.0),
             TextField(
               controller: _passwordController,
               decoration: const InputDecoration(
-                labelText: 'Password',
+                labelText: '221511021',
               ),
               obscureText: true,
             ),
@@ -65,7 +65,6 @@ class _LoginPageState extends State<LoginPage> {
               alignment: MainAxisAlignment.end,
               children: <Widget>[
                 TextButton(
-                  child: const Text('CANCEL'),
                   onPressed: () {
                     _usernameController.clear();
                     _passwordController.clear();
@@ -76,9 +75,9 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.all(Radius.circular(7.0)),
                     ),
                   ),
+                  child: const Text('CANCEL'),
                 ),
                 ElevatedButton(
-                  child: const Text('NEXT'),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -90,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.all(Radius.circular(7.0)),
                     ),
                   ),
+                  child: const Text('NEXT'),
                 ),
               ],
             ),
