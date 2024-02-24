@@ -34,6 +34,10 @@ class Product {
   final String name;
   final int price;
 
+  bool matchesQuery(String query) {
+    return name.toLowerCase().contains(query.toLowerCase());
+  }
+
   String get assetName => '$id-0.jpg';
   String get assetPackage => 'shrine_images';
 
