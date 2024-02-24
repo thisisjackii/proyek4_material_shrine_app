@@ -1,3 +1,5 @@
+// backdrop.dart
+
 // Copyright 2018-present the Flutter authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import 'login.dart';
 import 'model/product.dart';
+import 'model/products_repository.dart';
 
 const double _kFlingVelocity = 2.0;
 
@@ -155,6 +158,7 @@ class Backdrop extends StatefulWidget {
   final Widget backLayer;
   final Widget frontTitle;
   final Widget backTitle;
+  final List<Product> products; // Add this line
 
   const Backdrop({
     required this.currentCategory,
@@ -162,11 +166,67 @@ class Backdrop extends StatefulWidget {
     required this.backLayer,
     required this.frontTitle,
     required this.backTitle,
+    required this.products, // Add this line
     Key? key,
   }) : super(key: key);
 
   @override
   _BackdropState createState() => _BackdropState();
+}
+
+class _SearchDelegate extends SearchDelegate<void> {
+  final List<Product> products;
+
+  _SearchDelegate() : products = ProductsRepository.loadProducts(Category.all);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final filteredProducts =
+        products.where((product) => product.matchesQuery(query)).toList();
+    return _buildProductList(filteredProducts);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return const Center(
+      child: Text('Type to search for products'),
+    );
+  }
+
+  Widget _buildProductList(List<Product> products) {
+    return ListView.builder(
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return ListTile(
+          title: Text(product.name),
+          subtitle: Text('\$${product.price}'),
+        );
+      },
+    );
+  }
 }
 
 class _BackdropState extends State<Backdrop>
@@ -259,10 +319,10 @@ class _BackdropState extends State<Backdrop>
             semanticLabel: 'login',
           ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) => const LoginPage()),
+            showSearch(
+              context: context,
+              delegate:
+                  _SearchDelegate(),
             );
           },
         ),
