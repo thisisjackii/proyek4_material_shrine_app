@@ -34,6 +34,8 @@ class _ShrineAppState extends State<ShrineApp> {
   late Future<List<Product>> _productsFuture;
   Category _currentCategory = Category.all;
 
+  List<Product> _products = [];
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +63,13 @@ class _ShrineAppState extends State<ShrineApp> {
                     ),
                     frontTitle: const Text('SHRINE'),
                     backTitle: const Text('MENU'),
-                    products: snapshot.data!,
+                    products: _products,
+                    onUpdateProducts: (List<Product> updatedProducts) {
+                      setState(() {
+                        _products =
+                            updatedProducts;
+                      });
+                    },
                   );
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');

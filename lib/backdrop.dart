@@ -14,9 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 
-import 'login.dart';
 import 'model/product.dart';
 import 'model/products_repository.dart';
 
@@ -84,7 +85,6 @@ class _BackdropTitle extends AnimatedWidget {
       softWrap: false,
       overflow: TextOverflow.ellipsis,
       child: Row(children: <Widget>[
-        // branded icon
         SizedBox(
           width: 72.0,
           child: IconButton(
@@ -105,8 +105,6 @@ class _BackdropTitle extends AnimatedWidget {
             ]),
           ),
         ),
-        // Here, we do a custom cross fade between backTitle and frontTitle.
-        // This makes a smooth animation between the two texts.
         Stack(
           children: <Widget>[
             Opacity(
@@ -158,7 +156,8 @@ class Backdrop extends StatefulWidget {
   final Widget backLayer;
   final Widget frontTitle;
   final Widget backTitle;
-  final List<Product> products; // Add this line
+  final List<Product> products;
+  final void Function(List<Product>) onUpdateProducts;
 
   const Backdrop({
     required this.currentCategory,
@@ -166,7 +165,8 @@ class Backdrop extends StatefulWidget {
     required this.backLayer,
     required this.frontTitle,
     required this.backTitle,
-    required this.products, // Add this line
+    required this.products,
+    required this.onUpdateProducts,
     Key? key,
   }) : super(key: key);
 
@@ -234,6 +234,9 @@ class _BackdropState extends State<Backdrop>
   final GlobalKey _backdropKey = GlobalKey(debugLabel: 'Backdrop');
   late AnimationController _controller;
 
+  static const List<String> _sortingOptions = ['Name', 'Price'];
+  String _selectedSortingOption = _sortingOptions[0];
+
   @override
   void initState() {
     super.initState();
@@ -245,20 +248,19 @@ class _BackdropState extends State<Backdrop>
   }
 
   @override
-  void didUpdateWidget(Backdrop old) {
-    super.didUpdateWidget(old);
-
-    if (widget.currentCategory != old.currentCategory) {
-      _toggleBackdropLayerVisibility();
-    } else if (!_frontLayerVisible) {
-      _controller.fling(velocity: _kFlingVelocity);
-    }
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _sortProducts() {
+    List<Product> sortedProducts = List.from(widget.products);
+    if (_selectedSortingOption == 'Name') {
+      sortedProducts.sort((a, b) => a.name.compareTo(b.name));
+    } else if (_selectedSortingOption == 'Price') {
+      sortedProducts.sort((a, b) => a.price.compareTo(b.price));
+    }
+    widget.onUpdateProducts(sortedProducts);
   }
 
   bool get _frontLayerVisible {
@@ -287,8 +289,8 @@ class _BackdropState extends State<Backdrop>
       key: _backdropKey,
       children: <Widget>[
         ExcludeSemantics(
-          child: widget.backLayer,
           excluding: _frontLayerVisible,
+          child: widget.backLayer,
         ),
         PositionedTransition(
           rect: layerAnimation,
@@ -321,8 +323,7 @@ class _BackdropState extends State<Backdrop>
           onPressed: () {
             showSearch(
               context: context,
-              delegate:
-                  _SearchDelegate(),
+              delegate: _SearchDelegate(),
             );
           },
         ),
@@ -332,10 +333,25 @@ class _BackdropState extends State<Backdrop>
             semanticLabel: 'login',
           ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) => const LoginPage()),
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                return ListView.builder(
+                  itemCount: _sortingOptions.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_sortingOptions[index]),
+                      onTap: () {
+                        setState(() {
+                          _selectedSortingOption = _sortingOptions[index];
+                          _sortProducts();
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                );
+              },
             );
           },
         ),
