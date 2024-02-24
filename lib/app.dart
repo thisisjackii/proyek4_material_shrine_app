@@ -20,6 +20,7 @@ import 'colors.dart';
 import 'home.dart';
 import 'login.dart';
 import 'model/product.dart';
+import 'model/products_repository.dart';
 import 'supplemental/cut_corners_border.dart';
 
 class ShrineApp extends StatefulWidget {
@@ -30,7 +31,15 @@ class ShrineApp extends StatefulWidget {
 }
 
 class _ShrineAppState extends State<ShrineApp> {
+  late Future<List<Product>> _productsFuture;
   Category _currentCategory = Category.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = Future<List<Product>>(
+        () => ProductsRepository.loadProducts(Category.all));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +48,27 @@ class _ShrineAppState extends State<ShrineApp> {
       initialRoute: '/login',
       routes: {
         '/login': (BuildContext context) => const LoginPage(),
-        '/': (BuildContext context) => Backdrop(
-              currentCategory: _currentCategory,
-              frontLayer: HomePage(category: _currentCategory),
-              backLayer: CategoryMenuPage(
-                currentCategory: _currentCategory,
-                onCategoryTap: _onCategoryTap,
-              ),
-              frontTitle: const Text('SHRINE'),
-              backTitle: const Text('MENU'),
+        '/': (BuildContext context) => FutureBuilder<List<Product>>(
+              future: _productsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Backdrop(
+                    currentCategory: _currentCategory,
+                    frontLayer: HomePage(category: _currentCategory),
+                    backLayer: CategoryMenuPage(
+                      currentCategory: _currentCategory,
+                      onCategoryTap: _onCategoryTap,
+                    ),
+                    frontTitle: const Text('SHRINE'),
+                    backTitle: const Text('MENU'),
+                    products: snapshot.data!,
+                  );
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return const CircularProgressIndicator();
+                }
+              },
             ),
       },
       theme: _kShrineTheme,
